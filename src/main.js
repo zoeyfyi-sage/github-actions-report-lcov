@@ -15,7 +15,9 @@ async function run() {
     const coverageFiles = await (await glob.create(coverageFilesPattern)).glob();
 
     const baselineFilesPattern = core.getInput('baseline-files');
+    core.info(`baselineFilesPattern: ${baselineFilesPattern}`)    
     const baselineFiles = baselineFilesPattern !== "" ? await (await glob.create(baselineFilesPattern)).glob() : undefined;
+    core.info(`baselineFiles: ${baselineFiles?.join(', ')}`)
 
     const titlePrefix = core.getInput('title-prefix');
     const additionalMessage = core.getInput('additional-message');
@@ -25,7 +27,8 @@ async function run() {
     const coverageFile = await mergeCoverages(coverageFiles, tmpDiffPath);
     const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base');
     const baselineFile = baselineFiles && await mergeCoverages(baselineFiles, tmpBasePath);
-    
+    core.info(`baselineFile: ${baselineFile}`)
+
     const artifact = await genhtml(coverageFiles, baselineFile, tmpPath);
     
     const totalCoverage = lcovTotal(coverageFile);
@@ -123,7 +126,7 @@ async function genhtml(coverageFile, baselineFile, tmpPath) {
       ? ['--baseline-file', baselineFile, '--diff-file', coverageFile]
       : [coverageFile]
 
-  args.concat(['--rc', 'lcov_branch_coverage=1'])
+  args = args.concat(['--rc', 'lcov_branch_coverage=1'])
 
   args.push('--output-directory');
   args.push(artifactPath);
