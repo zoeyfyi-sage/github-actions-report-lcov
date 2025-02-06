@@ -126,14 +126,15 @@ async function genhtml(coverageFile, baselineFile, diffFilePath, tmpPath) {
   const artifactName = core.getInput('artifact-name').trim();
   const artifactPath = path.resolve(tmpPath, 'html').trim();
 
-  const args = [coverageFile] 
+  const args = [coverageFile];
   if (baselineFile) {
     // https://www.mankier.com/1/genhtml#Description-Differential_coverage
     core.info(`Differential coverage enabled`);
-    args.push('--baseline-file', baselineFile, '--diff-file', diffFilePath)
+    args.push('--baseline-file', baselineFile, '--diff-file', diffFilePath);
   }
 
-  args.push('--rc', 'lcov_branch_coverage=1')
+  args.push('--ignore-errors', 'unmapped');
+  args.push('--rc', 'lcov_branch_coverage=1');
   args.push('--output-directory');
   args.push(artifactPath);
 
