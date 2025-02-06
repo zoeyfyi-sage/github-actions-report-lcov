@@ -23,9 +23,9 @@ async function run() {
     const additionalMessage = core.getInput('additional-message');
     const updateComment = core.getInput('update-comment') === 'true';
 
-    const tmpDiffPath = path.resolve(os.tmpdir(), github.context.action, 'diff');
+    const tmpDiffPath = path.resolve(os.tmpdir(), github.context.action, 'diff.info');
     const coverageFile = await mergeCoverages(coverageFiles, tmpDiffPath);
-    const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base');
+    const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base.info');
     const baselineFile = baselineFiles && await mergeCoverages(baselineFiles, tmpBasePath);
     core.info(`baselineFile: ${baselineFile}`)
 
@@ -152,9 +152,6 @@ async function genhtml(coverageFile, baselineFile, tmpPath) {
 }
 
 async function mergeCoverages(coverageFiles, tmpPath) {
-  // This is broken for some reason:
-  //const mergedCoverageFile = path.resolve(tmpPath, 'lcov.info');
-  const mergedCoverageFile = tmpPath + '/lcov.info';
   const args = [];
 
   for (const coverageFile of coverageFiles) {
@@ -163,11 +160,11 @@ async function mergeCoverages(coverageFiles, tmpPath) {
   }
 
   args.push('--output-file');
-  args.push(mergedCoverageFile);
+  args.push(tmpPath);
 
   await exec.exec('lcov', [...args, '--rc', 'lcov_branch_coverage=1']);
 
-  return mergedCoverageFile;
+  return tmpPath;
 }
 
 async function summarize(coverageFile) {
