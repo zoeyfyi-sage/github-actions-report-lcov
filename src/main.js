@@ -127,7 +127,7 @@ async function genhtml(coverageFile, baselineFile, tmpPath) {
 
   // https://www.mankier.com/1/genhtml#Description-Differential_coverage
   if (baselineFile) core.info(`Differential coverage enabled`);
-  const args = baselineFile 
+  let args = baselineFile 
       ? ['--baseline-file', baselineFile, '--diff-file', coverageFile]
       : [coverageFile]
 
