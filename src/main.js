@@ -6,6 +6,7 @@ const glob = require('@actions/glob');
 const lcovTotal = require("lcov-total");
 const os = require('os');
 const path = require('path');
+const fs = require('fs/promises');
 
 const events = ['pull_request', 'pull_request_target'];
 
@@ -24,8 +25,10 @@ async function run() {
     const updateComment = core.getInput('update-comment') === 'true';
 
     const tmpDiffPath = path.resolve(os.tmpdir(), github.context.action, 'diff.info');
-    const coverageFile = await mergeCoverages(coverageFiles, tmpDiffPath);
     const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base.info');
+    await fs.mkdir(path.dirname(tmpDiffPath), {recursive: true})
+    await fs.mkdir(path.dirname(tmpBasePath), {recursive: true})
+    const coverageFile = await mergeCoverages(coverageFiles, tmpDiffPath);
     const baselineFile = baselineFiles && await mergeCoverages(baselineFiles, tmpBasePath);
     core.info(`baselineFile: ${baselineFile}`)
 
