@@ -24,6 +24,7 @@ async function run() {
     const additionalMessage = core.getInput('additional-message');
     const updateComment = core.getInput('update-comment') === 'true';
 
+    const diffFilePath = core.getInput('diff-file');
     const tmpDiffPath = path.resolve(os.tmpdir(), github.context.action, 'diff.info');
     const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base.info');
     await fs.mkdir(path.dirname(tmpDiffPath), {recursive: true})
@@ -34,7 +35,7 @@ async function run() {
 
     const tmpPath = path.resolve(os.tmpdir(), github.context.action, 'artifact');
     await fs.mkdir(tmpPath, {recursive: true})
-    const artifact = await genhtml(coverageFiles, baselineFile, tmpPath);
+    const artifact = await genhtml(coverageFiles, baselineFile, diffFilePath, tmpPath);
     
     const totalCoverage = lcovTotal(coverageFile);
     const minimumCoverage = core.getInput('minimum-coverage');
@@ -120,19 +121,19 @@ async function upsertComment(body, commentHeaderPrefix, octokit) {
   }
 }
 
-async function genhtml(coverageFile, baselineFile, tmpPath) {
+async function genhtml(coverageFile, baselineFile, diffFilePath, tmpPath) {
   const workingDirectory = core.getInput('working-directory').trim() || './';
   const artifactName = core.getInput('artifact-name').trim();
   const artifactPath = path.resolve(tmpPath, 'html').trim();
 
-  // https://www.mankier.com/1/genhtml#Description-Differential_coverage
-  if (baselineFile) core.info(`Differential coverage enabled`);
-  let args = baselineFile 
-      ? ['--baseline-file', baselineFile, '--diff-file', coverageFile]
-      : [coverageFile]
+  const args = [coverageFile] 
+  if (baselineFile) {
+    // https://www.mankier.com/1/genhtml#Description-Differential_coverage
+    core.info(`Differential coverage enabled`);
+    args.push('--baseline-file', baselineFile, '--diff-file', diffFilePath)
+  }
 
-  args = args.concat(['--rc', 'lcov_branch_coverage=1'])
-
+  args.push('--rc', 'lcov_branch_coverage=1')
   args.push('--output-directory');
   args.push(artifactPath);
 
