@@ -133,7 +133,7 @@ async function genhtml(coverageFile, baselineFile, diffFilePath, tmpPath) {
     args.push('--baseline-file', baselineFile, '--diff-file', diffFilePath);
   }
 
-  args.push('--ignore-errors', 'unmapped');
+  // args.push('--ignore-errors', 'unmapped');
   args.push('--rc', 'lcov_branch_coverage=1');
   args.push('--output-directory');
   args.push(artifactPath);
