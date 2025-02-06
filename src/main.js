@@ -11,17 +11,23 @@ const events = ['pull_request', 'pull_request_target'];
 
 async function run() {
   try {
-    const tmpPath = path.resolve(os.tmpdir(), github.context.action);
     const coverageFilesPattern = core.getInput('coverage-files');
-    const globber = await glob.create(coverageFilesPattern);
-    const coverageFiles = await globber.glob();
+    const coverageFiles = await (await glob.create(coverageFilesPattern)).glob();
+
+    const baselineFilesPattern = core.getInput('baseline-files');
+    const baselineFiles = baselineFilesPattern !== "" ? await (await glob.create(baselineFilesPattern)).glob() : undefined;
+
     const titlePrefix = core.getInput('title-prefix');
     const additionalMessage = core.getInput('additional-message');
     const updateComment = core.getInput('update-comment') === 'true';
 
-    const artifact = await genhtml(coverageFiles, tmpPath);
-
-    const coverageFile = await mergeCoverages(coverageFiles, tmpPath);
+    const tmpDiffPath = path.resolve(os.tmpdir(), github.context.action, 'diff');
+    const coverageFile = await mergeCoverages(coverageFiles, tmpDiffPath);
+    const tmpBasePath = path.resolve(os.tmpdir(), github.context.action, 'base');
+    const baselineFile = baselineFiles && await mergeCoverages(baselineFiles, tmpBasePath);
+    
+    const artifact = await genhtml(coverageFiles, baselineFile, tmpPath);
+    
     const totalCoverage = lcovTotal(coverageFile);
     const minimumCoverage = core.getInput('minimum-coverage');
     const gitHubToken = core.getInput('github-token').trim();
@@ -106,11 +112,17 @@ async function upsertComment(body, commentHeaderPrefix, octokit) {
   }
 }
 
-async function genhtml(coverageFiles, tmpPath) {
+async function genhtml(coverageFile, baselineFile, tmpPath) {
   const workingDirectory = core.getInput('working-directory').trim() || './';
   const artifactName = core.getInput('artifact-name').trim();
   const artifactPath = path.resolve(tmpPath, 'html').trim();
-  const args = [...coverageFiles, '--rc', 'lcov_branch_coverage=1'];
+
+  // https://www.mankier.com/1/genhtml#Description-Differential_coverage
+  const args = baselineFile 
+      ? ['--baseline-file', baselineFile, '--diff-file', coverageFile]
+      : [coverageFile]
+
+  args.concat(['--rc', 'lcov_branch_coverage=1'])
 
   args.push('--output-directory');
   args.push(artifactPath);
