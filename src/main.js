@@ -32,6 +32,8 @@ async function run() {
     const baselineFile = baselineFiles && await mergeCoverages(baselineFiles, tmpBasePath);
     core.info(`baselineFile: ${baselineFile}`)
 
+    const tmpPath = path.resolve(os.tmpdir(), github.context.action, 'artifact');
+    await fs.mkdir(tmpPath, {recursive: true})
     const artifact = await genhtml(coverageFiles, baselineFile, tmpPath);
     
     const totalCoverage = lcovTotal(coverageFile);
