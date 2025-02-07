@@ -133,10 +133,12 @@ async function genhtml(coverageFile, baselineFile, diffFilePath, tmpPath) {
     args.push('--baseline-file', baselineFile, '--diff-file', diffFilePath);
   }
 
-  args.push('--flat', '-branch-coverage', '--legend', '--dark-mode')
-  args.push('--source-directory', 'assets/portal')
-  // args.push('--ignore-errors', 'unmapped');
-  // args.push('--rc', 'lcov_branch_coverage=1');
+  const additionalArgs = core.getInput('additional-genhtml-args')
+  for (const arg of additionalArgs.split(" ").map(a => a.trim())) {
+    if (arg === "") continue
+    args.push(arg)
+  }
+
   args.push('--output-directory');
   args.push(artifactPath);
 

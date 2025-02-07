@@ -13,6 +13,9 @@ inputs:
   diff-file:
     description: 'Diff file for differential coverage'
     required: false
+  additional-genhtml-args:
+    description: 'Arguments to append to lcov's `genhtml` command'
+    required: false
   artifact-name:
     description: 'The GitHub artifact name of the generated HTML report. For example, `code-coverage-report`. _Note:_ When downloading, it will be extracted in an `html` directory. Optional. Default: `` (Skips uploading of artifacts)'
   minimum-coverage:
